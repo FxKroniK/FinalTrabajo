@@ -72,21 +72,26 @@ export class ProductService {
   }
 
   searchProductsByCoordinates(latitude: number, longitude: number, radius: number, category: string, keyword: string): Observable<Product[]> {
-    let params = new HttpParams()
-      .set('latitude', latitude.toString())
-      .set('longitude', longitude.toString())
-      .set('radius', radius.toString());
-    if (category) {
-      params = params.set('category', category);
-    }
-    if (keyword) {
-      params = params.set('keyword', keyword);
-    }
-    return this.http.get<Product[]>(`${this.apiUrl}/products/search/coordinates`, { headers: this.getHeaders(), params })
-      .pipe(
-        catchError(this.handleError)
-      );
+  console.log('Parámetros enviados:', { latitude, longitude, radius, category, keyword });
+  let params = new HttpParams()
+    .set('latitude', latitude.toString())
+    .set('longitude', longitude.toString())
+    .set('radius', radius.toString());
+  if (category) {
+    params = params.set('category', category);
   }
+  if (keyword) {
+    params = params.set('keyword', keyword);
+  }
+  const token = localStorage.getItem('token') ?? undefined; // Convierte null a undefined
+  console.log('Token enviado:', token);
+  return this.http.get<Product[]>(`${this.apiUrl}/products/by-coordinates`, { 
+    headers: this.getHeaders(token), 
+    params 
+  }).pipe(
+    catchError(this.handleError)
+  );
+}
 
   searchProducts(keyword: string, latitude: number, longitude: number, radius: number, category: string): Observable<Product[]> {
     let params = new HttpParams().set('keyword', keyword);

@@ -262,29 +262,38 @@ export class MainComponent implements OnInit {
   }
 
   applyFilterAndSearch(): void {
-    this.isLoading = true;
-    this.isLocationModalOpen = false;
-    this.search = true;
-    this.searchCategory = false;
-    this.productService
-      .searchProductsByCoordinates(this.latitude, this.longitude, this.radius, this.selectedCategory, this.searchKeyword)
-      .subscribe({
-        next: (products) => {
-          this.products = products;
-          this.isLoading = false;
-          this.updateProductConversations();
-          const token = localStorage.getItem('token');
-          if (token) {
-            this.loadFavorites(token);
-          }
-        },
-        error: (error) => {
-          console.error('Error al buscar por coordenadas:', error);
-          this.isLoading = false;
-          alert('Error al buscar productos por ubicación. Por favor, intenta de nuevo.');
-        }
-      });
+  const token = localStorage.getItem('token');
+  console.log('Token en applyFilterAndSearch:', token);
+  if (!token) {
+    alert('No se encontró un token. Por favor, inicia sesión.');
+    this.router.navigate(['/login']);
+    return;
   }
+  if (this.latitude == null || this.longitude == null || this.radius == null) {
+    console.error('Parámetros inválidos:', { latitude: this.latitude, longitude: this.longitude, radius: this.radius });
+    alert('Por favor, selecciona una ubicación válida.');
+    return;
+  }
+  this.isLoading = true;
+  this.isLocationModalOpen = false;
+  this.search = true;
+  this.searchCategory = false;
+  this.productService
+    .searchProductsByCoordinates(this.latitude, this.longitude, this.radius, this.selectedCategory, this.searchKeyword)
+    .subscribe({
+      next: (products) => {
+        this.products = products;
+        this.isLoading = false;
+        this.updateProductConversations();
+        this.loadFavorites(token);
+      },
+      error: (error) => {
+        console.error('Error al buscar por coordenadas:', error);
+        this.isLoading = false;
+        alert('Error al buscar productos por ubicación: ' + error.message);
+      }
+    });
+}
 
   loadProducts(): void {
     this.isLoading = true;

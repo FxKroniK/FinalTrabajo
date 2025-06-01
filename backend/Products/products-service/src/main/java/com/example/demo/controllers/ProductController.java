@@ -11,7 +11,6 @@ import com.example.demo.entities.Product;
 import com.example.demo.interfaces.ProductService;
 import com.example.demo.repositories.FavoriteRepository;
 import com.example.demo.repositories.ProductRepository;
-import com.example.demo.services.ProductServiceImpl;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -84,7 +83,6 @@ public class ProductController {
         return ResponseEntity.ok(product);
     }
 
-
     @GetMapping("/ownerId/{ownerId}")
     public ResponseEntity<List<ProductDto>> getProductByOwnerId(@PathVariable long ownerId) {
         if (ownerId == 0) {
@@ -137,16 +135,31 @@ public class ProductController {
             @RequestParam(required = false) String category,
             @RequestParam(required = false) String keyword,
             @RequestHeader("Authorization") String token) {
-        ProductServiceImpl.setCurrentToken(token);
+        System.out.println("Recibida solicitud a /products/by-coordinates");
+        System.out.println("Parámetros: latitude=" + latitude + ", longitude=" + longitude + ", radius=" + radius + ", category=" + category + ", keyword=" + keyword);
+        System.out.println("Token recibido: " + token);
         try {
-            UserInfoDto userInfo = authClient.validateUserToken(token.replace("Bearer ", "")).block();
+            String cleanToken = token.replace("Bearer ", "");
+            System.out.println("Token limpio: " + cleanToken);
+            UserInfoDto userInfo = authClient.validateUserToken(cleanToken).block();
             if (userInfo == null) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+                System.out.println("Token inválido o usuario no encontrado");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
             }
-            List<ProductDto> products = productService.getProductsByCoordinates(latitude, longitude, radius, category, keyword);
+            System.out.println("Usuario validado: ID=" + userInfo.getId() + ", Email=" + userInfo.getUseremail());
+            List<ProductDto> products = productService.getProductsByCoordinates(latitude, longitude, radius, category, keyword, token);
+            System.out.println("Productos encontrados: " + (products != null ? products.size() : 0));
             return ResponseEntity.ok(products);
-        } finally {
-            ProductServiceImpl.clearCurrentToken();
+        } catch (IllegalArgumentException e) {
+            System.out.println("Error de validación: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        } catch (IllegalStateException e) {
+            System.out.println("Error de estado: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        } catch (Exception e) {
+            System.out.println("Error inesperado en /products/by-coordinates: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
 
@@ -162,7 +175,6 @@ public class ProductController {
                         dto.setFavoriteCount(result.getCount());
                         return dto;
                     } catch (Exception e) {
-                        // Si el producto no existe, lo ignoramos
                         return null;
                     }
                 })
@@ -206,7 +218,6 @@ public class ProductController {
                     try {
                         return productService.getProductById(f.getProductId());
                     } catch (NoSuchElementException e) {
-                        // Producto borrado, ignorar este favorito
                         return null;
                     }
                 })

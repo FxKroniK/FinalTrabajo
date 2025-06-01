@@ -15,7 +15,6 @@ import com.example.demo.utils.DistanceCalculator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
@@ -27,26 +26,16 @@ public class ProductServiceImpl implements ProductService {
     private ProductRepository productRepository;
 
     @Autowired
-    private FavoriteRepository favoriteRepository; // Añadido
+    private FavoriteRepository favoriteRepository;
 
     @Autowired
     private AuthClient authClient;
 
     private final UserClient userClient;
 
-    private static final ThreadLocal<String> currentToken = new ThreadLocal<>();
-
     public ProductServiceImpl(UserClient userClient, ProductRepository productRepository) {
         this.userClient = userClient;
         this.productRepository = productRepository;
-    }
-
-    public static void setCurrentToken(String token) {
-        currentToken.set(token);
-    }
-
-    public static void clearCurrentToken() {
-        currentToken.remove();
     }
 
     @Override
@@ -67,7 +56,7 @@ public class ProductServiceImpl implements ProductService {
 
         product = productRepository.save(product);
         System.out.println("Producto guardado con id: " + product.getId());
-        return mapToDto(product);
+        return mapToDto(product, null);
     }
 
     @Override
@@ -84,7 +73,7 @@ public class ProductServiceImpl implements ProductService {
         } else {
             products = productRepository.findAll();
         }
-        return products.stream().map(this::mapToDto).collect(Collectors.toList());
+        return products.stream().map(product -> mapToDto(product, null)).collect(Collectors.toList());
     }
 
     @Override
@@ -94,7 +83,7 @@ public class ProductServiceImpl implements ProductService {
         }
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("Product not found with id: " + id));
-        return mapToDto(product);
+        return mapToDto(product, null);
     }
 
     @Override
@@ -114,7 +103,7 @@ public class ProductServiceImpl implements ProductService {
         if (dto.getImageId() != null) product.setImageId(dto.getImageId());
 
         product = productRepository.save(product);
-        return mapToDto(product);
+        return mapToDto(product, null);
     }
 
     @Override
@@ -146,7 +135,7 @@ public class ProductServiceImpl implements ProductService {
     public ProductDto getProductsByOwnerAndId(long ownerId, String productId) {
         Product product = productRepository.findByOwnerIdAndId(ownerId, productId);
         if (product != null) {
-            return mapToDto(product);
+            return mapToDto(product, null);
         }
         return null;
     }
@@ -158,7 +147,7 @@ public class ProductServiceImpl implements ProductService {
             throw new IllegalArgumentException("El ownerId no puede ser 0");
         }
         List<Product> products = productRepository.findByOwnerId(ownerId);
-        return products.stream().map(this::mapToDto).toList();
+        return products.stream().map(product -> mapToDto(product, null)).toList();
     }
 
     @Override
@@ -170,18 +159,17 @@ public class ProductServiceImpl implements ProductService {
     public List<ProductDto> getProductsByLocation(String location) {
         List<Long> userIds = userClient.getUserIdsByLocation(location);
         List<Product> products = productRepository.findByOwnerIdIn(userIds);
-        return products.stream().map(this::mapToDto).toList();
+        return products.stream().map(product -> mapToDto(product, null)).toList();
     }
 
     @Override
-    public List<ProductDto> getProductsByCoordinates(Double latitude, Double longitude, Double radius, String category, String keyword) {
+    public List<ProductDto> getProductsByCoordinates(Double latitude, Double longitude, Double radius, String category, String keyword, String token) {
         if (latitude == null || longitude == null) {
             throw new IllegalArgumentException("Latitude and longitude are required");
         }
 
-        String token = currentToken.get();
         if (token == null) {
-            throw new IllegalStateException("No token available in the current context");
+            throw new IllegalStateException("No token provided");
         }
 
         List<UserLocationDto> users = userClient.getUsersWithLocation(token);
@@ -205,10 +193,10 @@ public class ProductServiceImpl implements ProductService {
                     .collect(Collectors.toList());
         }
 
-        return products.stream().map(this::mapToDto).collect(Collectors.toList());
+        return products.stream().map(product -> mapToDto(product, token)).collect(Collectors.toList());
     }
 
-    public ProductDto mapToDto(Product product) {
+    public ProductDto mapToDto(Product product, String token) {
         ProductDto dto = new ProductDto();
         dto.setId(product.getId());
         dto.setOwnerId(product.getOwnerId());
@@ -223,9 +211,9 @@ public class ProductServiceImpl implements ProductService {
         dto.setImageId(product.getImageId());
 
         // Calcular isFavorite y favoriteCount
-        String token = currentToken.get();
         if (token != null) {
-            Long userId = getOwnerIdFromToken(token);
+            String cleanToken = token.startsWith("Bearer ") ? token.replace("Bearer ", "") : token;
+            Long userId = getOwnerIdFromToken(cleanToken);
             dto.setIsFavorite(favoriteRepository.existsByUserIdAndProductId(userId, product.getId()));
             long favoriteCount = favoriteRepository.countByProductId(product.getId());
             dto.setFavoriteCount(favoriteCount);
