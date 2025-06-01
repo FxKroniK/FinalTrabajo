@@ -410,7 +410,7 @@ export class MainComponent implements OnInit {
   }
 
   irACrear(): void {
-    this.router.navigate(['/create-product']);
+    this.router.navigate(['/create']);
   }
 
   irALogin(): void {

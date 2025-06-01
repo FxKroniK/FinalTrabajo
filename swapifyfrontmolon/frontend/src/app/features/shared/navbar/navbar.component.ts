@@ -10,6 +10,7 @@ import { Product } from '../../../models/product.model';
 import { UserDto, UserProfile } from '../../../models/user.model';
 
 
+
 declare var google: any;
 
 @Component({
@@ -41,6 +42,7 @@ export class NavbarComponent implements OnInit {
     private authService: AuthService,
     private negotiationService: NegotiationService,
     private userService: UserService
+    
   ) {}
 
   ngOnInit(): void {
@@ -253,6 +255,7 @@ export class NavbarComponent implements OnInit {
     }
     this.closeLocationModal();
   }
+  
 
   buscarProductos() {
     const token = localStorage.getItem('token');
@@ -324,12 +327,10 @@ export class NavbarComponent implements OnInit {
     }
   }
 
-  filtrarPorCategoria(category: string) {
-    this.selectedCategory = category;
-    this.searchCategory = true;
-    this.search = false;
-    this.buscarProductos();
-  }
+ filtrarPorCategoria(category: string) {
+    this.router.navigate(['/main'], { queryParams: { category } });
+
+}
 
   irAMain() {
     this.router.navigate(['/main']);

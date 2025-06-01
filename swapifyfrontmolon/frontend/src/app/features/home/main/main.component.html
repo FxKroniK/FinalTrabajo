@@ -17,7 +17,7 @@
           </i>
           <input
             type="text"
-            placeholder="Buscar"
+            placeholder="Buscar productos, marcas y mucho más..."
             [(ngModel)]="searchKeyword"
             class="search-input"
             (keyup.enter)="buscarProductos()"
@@ -32,16 +32,6 @@
         <button (click)="irACrear()" class="create-product-button">
           Crear Producto
         </button>
-        <select
-          [(ngModel)]="selectedCategory"
-          class="category-select"
-        >
-          <option value="">Todas las categorías</option>
-          <option value="Hogar">Hogar</option>
-          <option value="Deportes">Deportes</option>
-          <option value="Ropa">Ropa</option>
-          <option value="Electrónica">Electrónica</option>
-        </select>
       </div>
 
       <!-- Acciones de usuario -->
