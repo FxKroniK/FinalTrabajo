@@ -560,3 +560,16 @@ body {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+.product-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.product-info {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.product-card .chat-button {
+  margin-top: auto !important;
+}

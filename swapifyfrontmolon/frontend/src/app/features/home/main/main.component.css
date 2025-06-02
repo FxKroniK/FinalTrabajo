@@ -15,6 +15,11 @@
   --wallapop-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   --wallapop-shadow-hover: 0 8px 25px rgba(0, 0, 0, 0.15);
 }
+.product-card .view-product-button,
+.product-card .chat-button,
+.product-card .view-detail-button {
+  margin-top: auto !important;
+}
 
 /* Estilos generales mejorados */
 * {
@@ -701,6 +706,7 @@ body {
 
 /* 💎 TARJETAS DE PRODUCTO SIN BORDES - MÁS LIMPIAS */
 .product-card {
+  margin-top: auto !important;
   background: var(--wallapop-white);
   border-radius: 24px;
   overflow: hidden;
@@ -710,6 +716,9 @@ body {
   box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
   border: none; /* SIN BORDES */
   animation: slideInUp 0.6s ease-out;
+  height: 100%; /* <-- Añade esto */
+  display: flex;         /* <-- Añade esto */
+  flex-direction: column;/* <-- Añade esto */
 }
 
 /* Delay escalonado para las tarjetas */
@@ -893,7 +902,6 @@ body {
   letter-spacing: 0.5px !important;
   cursor: pointer !important;
   transition: all 0.3s ease !important;
-  margin-top: 12px !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -926,7 +934,6 @@ body {
   letter-spacing: 0.5px !important;
   cursor: pointer !important;
   transition: all 0.3s ease !important;
-  margin-top: 12px !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -953,6 +960,13 @@ body {
   cursor: pointer;
   transition: all 0.2s ease;
 }
+
+.product-info {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
 
 .chat-button:hover {
   transform: translateY(-1px);
@@ -1249,8 +1263,10 @@ body {
   }
 
   .products-grid {
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 16px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 24px;
+  align-items: stretch; /* <-- Añade esto */
   }
 
   .product-image-container {
@@ -1297,4 +1313,5 @@ body {
     font-size: 12px !important;
     height: 36px !important;
   }
+  
 }
